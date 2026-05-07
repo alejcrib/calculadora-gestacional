@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://calculadora-gestacional-seven.vercel.app/sitemap.xml
