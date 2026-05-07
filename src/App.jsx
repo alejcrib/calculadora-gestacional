@@ -32,6 +32,39 @@ const tiposGravidez = [
   },
 ];
 
+const conteudosEducativos = [
+  {
+    titulo: "O que é DUM?",
+    texto:
+      "DUM significa Data da Última Menstruação. Ela é uma referência usada para estimar o início da idade gestacional quando a data é conhecida e confiável.",
+  },
+  {
+    titulo: "O que é DPP?",
+    texto:
+      "DPP significa Data Provável do Parto. É uma estimativa calculada com base em 40 semanas de gestação, mas o nascimento pode ocorrer antes ou depois dessa data.",
+  },
+  {
+    titulo: "Como calcular idade gestacional?",
+    texto:
+      "Pela DUM, conta-se o número de dias desde a última menstruação e converte-se em semanas e dias. Pela primeira ultrassonografia, soma-se a idade gestacional do exame aos dias passados desde a realização do exame.",
+  },
+  {
+    titulo: "O que é primeira ultrassonografia?",
+    texto:
+      "É um exame de imagem realizado no início da gestação. Quando o laudo informa semanas e dias, esses dados podem ajudar a estimar a idade gestacional atual.",
+  },
+  {
+    titulo: "Trimestres da gravidez",
+    texto:
+      "De forma geral, o 1º trimestre vai até 13 semanas, o 2º trimestre vai de 14 a 27 semanas e o 3º trimestre começa a partir de 28 semanas.",
+  },
+  {
+    titulo: "Importante",
+    texto:
+      "Esta calculadora fornece apenas uma estimativa educativa. O acompanhamento com profissional de saúde é indispensável para avaliação individual.",
+  },
+];
+
 function formatarData(data) {
   return data.toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -47,6 +80,12 @@ function converterDiasParaSemanas(totalDias) {
   };
 }
 
+function normalizarData(data) {
+  const novaData = new Date(data);
+  novaData.setHours(0, 0, 0, 0);
+  return novaData;
+}
+
 export default function CalculadoraGestacional() {
   const [modoCalculo, setModoCalculo] = useState("dum");
   const [dataUltimaMenstruacao, setDataUltimaMenstruacao] = useState("");
@@ -56,9 +95,31 @@ export default function CalculadoraGestacional() {
   const [resultado, setResultado] = useState(null);
   const [erro, setErro] = useState("");
   const [mostrarInfo, setMostrarInfo] = useState(false);
+  const [mensagemCopiado, setMensagemCopiado] = useState("");
   const [tema, setTema] = useState("escuro");
 
   const modoEscuro = tema === "escuro";
+
+  const montarResultado = ({ metodo, metodoCurto, semanas, dias, diasGestacao, dataParto, extra = {} }) => {
+    const hoje = normalizarData(new Date());
+    const dataPartoNormalizada = normalizarData(dataParto);
+    const diasRestantes = Math.max(
+      0,
+      Math.ceil((dataPartoNormalizada.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
+    );
+
+    setResultado({
+      metodo,
+      metodoCurto,
+      semanas,
+      dias,
+      diasGestacao,
+      parto: formatarData(dataParto),
+      diasRestantes,
+      dataPartoISO: dataParto.toISOString(),
+      ...extra,
+    });
+  };
 
   const calcularPorDum = () => {
     if (!dataUltimaMenstruacao) {
@@ -83,7 +144,8 @@ export default function CalculadoraGestacional() {
     }
 
     const diasGestacao = Math.floor(
-      (hoje.getTime() - dum.getTime()) / (1000 * 60 * 60 * 24)
+      (normalizarData(hoje).getTime() - normalizarData(dum).getTime()) /
+        (1000 * 60 * 60 * 24)
     );
 
     const { semanas, dias } = converterDiasParaSemanas(diasGestacao);
@@ -91,13 +153,13 @@ export default function CalculadoraGestacional() {
     const dataParto = new Date(dum);
     dataParto.setDate(dataParto.getDate() + 280);
 
-    setResultado({
+    montarResultado({
       metodo: "Data da Última Menstruação",
       metodoCurto: "DUM",
       semanas,
       dias,
       diasGestacao,
-      parto: formatarData(dataParto),
+      dataParto,
     });
   };
 
@@ -146,7 +208,8 @@ export default function CalculadoraGestacional() {
 
     const diasNoExame = semanasBase * 7 + diasBase;
     const diasDesdeExame = Math.floor(
-      (hoje.getTime() - usg.getTime()) / (1000 * 60 * 60 * 24)
+      (normalizarData(hoje).getTime() - normalizarData(usg).getTime()) /
+        (1000 * 60 * 60 * 24)
     );
     const diasGestacao = diasNoExame + diasDesdeExame;
 
@@ -155,20 +218,23 @@ export default function CalculadoraGestacional() {
     const dataParto = new Date(usg);
     dataParto.setDate(dataParto.getDate() + (280 - diasNoExame));
 
-    setResultado({
+    montarResultado({
       metodo: "Primeira ultrassonografia",
       metodoCurto: "1ª USG",
       semanas,
       dias,
       diasGestacao,
-      parto: formatarData(dataParto),
-      semanasNoExame: semanasBase,
-      diasNoExame: diasBase,
+      dataParto,
+      extra: {
+        semanasNoExame: semanasBase,
+        diasNoExame: diasBase,
+      },
     });
   };
 
   const calcularGestacao = () => {
     setErro("");
+    setMensagemCopiado("");
 
     if (modoCalculo === "dum") {
       calcularPorDum();
@@ -192,6 +258,141 @@ export default function CalculadoraGestacional() {
       ? "2º trimestre"
       : "3º trimestre"
     : "";
+
+  const textoResultado = resultado
+    ? `Calculadora Gestacional\n\nIdade gestacional: ${resultado.semanas} semanas e ${resultado.dias} dias\nDPP: ${resultado.parto}\nDias restantes para a DPP: ${resultado.diasRestantes}\nTrimestre: ${trimestre}\nMétodo usado: ${resultado.metodo}\n\nCalculado em: https://calculadora-gestacional-seven.vercel.app/`
+    : "";
+
+  const copiarResultado = async () => {
+    if (!resultado) return;
+
+    try {
+      await navigator.clipboard.writeText(textoResultado);
+      setMensagemCopiado("Resultado copiado.");
+    } catch {
+      setMensagemCopiado("Não foi possível copiar automaticamente.");
+    }
+  };
+
+  const compartilharWhatsApp = () => {
+    if (!resultado) return;
+    const url = `https://wa.me/?text=${encodeURIComponent(textoResultado)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const gerarPdf = () => {
+    if (!resultado) return;
+
+    const janela = window.open("", "_blank", "width=900,height=700");
+    if (!janela) return;
+
+    janela.document.write(`
+      <!doctype html>
+      <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Resultado - Calculadora Gestacional</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 40px;
+              font-family: Arial, Helvetica, sans-serif;
+              color: #0f172a;
+              background: #fff7fb;
+            }
+            .card {
+              max-width: 720px;
+              margin: 0 auto;
+              background: #ffffff;
+              border: 1px solid #fbcfe8;
+              border-radius: 24px;
+              padding: 32px;
+            }
+            h1 {
+              margin: 0 0 8px;
+              color: #be185d;
+              font-size: 28px;
+            }
+            .subtitle {
+              margin: 0 0 28px;
+              color: #64748b;
+            }
+            .box {
+              border-radius: 18px;
+              background: #fff1f2;
+              padding: 20px;
+              margin-bottom: 16px;
+            }
+            .label {
+              color: #64748b;
+              font-size: 13px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: .08em;
+            }
+            .value {
+              margin-top: 6px;
+              font-size: 24px;
+              font-weight: 900;
+            }
+            .footer {
+              margin-top: 28px;
+              font-size: 12px;
+              color: #64748b;
+              line-height: 1.6;
+            }
+            @media print {
+              body { background: #ffffff; }
+              .card { border: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <main class="card">
+            <h1>Calculadora Gestacional</h1>
+            <p class="subtitle">Resultado estimado de idade gestacional e data provável do parto.</p>
+
+            <section class="box">
+              <div class="label">Idade gestacional</div>
+              <div class="value">${resultado.semanas} semanas e ${resultado.dias} dias</div>
+            </section>
+
+            <section class="box">
+              <div class="label">Data provável do parto</div>
+              <div class="value">${resultado.parto}</div>
+            </section>
+
+            <section class="box">
+              <div class="label">Dias restantes para a DPP</div>
+              <div class="value">${resultado.diasRestantes} dias</div>
+            </section>
+
+            <section class="box">
+              <div class="label">Trimestre</div>
+              <div class="value">${trimestre}</div>
+            </section>
+
+            <section class="box">
+              <div class="label">Método utilizado</div>
+              <div class="value">${resultado.metodo}</div>
+            </section>
+
+            <p class="footer">
+              Esta ferramenta fornece apenas uma estimativa e não substitui acompanhamento médico.<br />
+              Desenvolvido por Alexandre Ribeiro · https://calculadora-gestacional-seven.vercel.app/
+            </p>
+          </main>
+          <script>
+            window.onload = () => {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+
+    janela.document.close();
+  };
 
   const circumference = 2 * Math.PI * 52;
   const strokeDashoffset = circumference * (1 - progresso);
@@ -355,6 +556,7 @@ export default function CalculadoraGestacional() {
                     setModoCalculo("dum");
                     setErro("");
                     setResultado(null);
+                    setMensagemCopiado("");
                   }}
                   className={`rounded-xl px-3 py-3 text-sm font-black transition ${
                     modoCalculo === "dum"
@@ -370,6 +572,7 @@ export default function CalculadoraGestacional() {
                     setModoCalculo("usg");
                     setErro("");
                     setResultado(null);
+                    setMensagemCopiado("");
                   }}
                   className={`rounded-xl px-3 py-3 text-sm font-black transition ${
                     modoCalculo === "usg"
@@ -504,6 +707,9 @@ export default function CalculadoraGestacional() {
                         <p className="mt-2 text-2xl font-black capitalize leading-tight text-slate-950">
                           {resultado.parto}
                         </p>
+                        <p className="mt-2 text-sm font-bold text-rose-500">
+                          Faltam aproximadamente {resultado.diasRestantes} dias para a DPP.
+                        </p>
                         <p className="mt-2 text-xs font-semibold text-slate-400">
                           Método usado: {resultado.metodo}
                         </p>
@@ -599,6 +805,33 @@ export default function CalculadoraGestacional() {
                           </div>
                         </div>
                       </div>
+
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <button
+                          onClick={copiarResultado}
+                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+                        >
+                          Copiar resultado
+                        </button>
+                        <button
+                          onClick={compartilharWhatsApp}
+                          className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700 transition hover:bg-emerald-100"
+                        >
+                          WhatsApp
+                        </button>
+                        <button
+                          onClick={gerarPdf}
+                          className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-black text-rose-600 transition hover:bg-rose-100"
+                        >
+                          Gerar PDF
+                        </button>
+                      </div>
+
+                      {mensagemCopiado && (
+                        <p className="text-center text-xs font-bold text-rose-500">
+                          {mensagemCopiado}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -663,6 +896,32 @@ export default function CalculadoraGestacional() {
             </p>
           </section>
         )}
+
+        <section className={classes.infoSection}>
+          <div className="mb-6">
+            <p className={modoEscuro ? "text-sm font-bold uppercase tracking-[0.2em] text-pink-200/80" : "text-sm font-bold uppercase tracking-[0.2em] text-pink-600"}>
+              Guia educativo
+            </p>
+            <h2 className="mt-2 text-3xl font-black tracking-tight">
+              Como a calculadora gestacional funciona?
+            </h2>
+            <p className={`mt-3 max-w-3xl text-sm leading-7 ${classes.softText}`}>
+              Esta seção explica os principais conceitos usados no cálculo e ajuda o Google a entender melhor o conteúdo do site.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {conteudosEducativos.map((item) => (
+              <article key={item.titulo} className={classes.infoCard}>
+                <div className="mb-4 h-10 w-10 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500" />
+                <h3 className="text-xl font-black">{item.titulo}</h3>
+                <p className={`mt-3 text-sm leading-7 ${classes.softText}`}>
+                  {item.texto}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
 
         <footer className={modoEscuro ? "relative mt-10 text-center text-xs text-pink-100/60" : "relative mt-10 text-center text-xs text-slate-500"}>
           Desenvolvido por <span className={modoEscuro ? "font-semibold text-pink-50" : "font-semibold text-pink-700"}>Alexandre Ribeiro</span> · React + Tailwind CSS
