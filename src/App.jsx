@@ -30,8 +30,7 @@ export default function App() {
       return;
     }
 
-    const diferencaMs = hoje.getTime() - dum.getTime();
-    const diasGestacao = Math.floor(diferencaMs / (1000 * 60 * 60 * 24));
+    const diasGestacao = Math.floor((hoje - dum) / (1000 * 60 * 60 * 24));
 
     const semanas = Math.floor(diasGestacao / 7);
     const dias = diasGestacao % 7;
@@ -47,89 +46,50 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fuchsia-900 via-pink-800 to-rose-700 flex items-center justify-center p-6 overflow-hidden relative">
-      <div className="absolute w-96 h-96 bg-pink-400 opacity-20 rounded-full blur-3xl top-10 left-10"></div>
-      <div className="absolute w-80 h-80 bg-rose-300 opacity-20 rounded-full blur-3xl bottom-10 right-10"></div>
+    <main className="pagina">
+      <section className="card">
+        <div className="emoji">🤰</div>
 
-      <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-[32px] p-8 w-full max-w-md text-white">
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-3">🤰</div>
+        <h1>Calculadora Gestacional</h1>
 
-          <h1 className="text-4xl font-extrabold tracking-tight mb-2">
-            Calculadora Gestacional
-          </h1>
+        <p className="descricao">
+          Descubra a idade gestacional e a data provável do parto.
+        </p>
 
-          <p className="text-pink-100 text-sm">
-            Descubra a idade gestacional e a data provável do parto.
-          </p>
-        </div>
+        <label>Data da Última Menstruação (DUM)</label>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block mb-2 text-sm font-semibold text-pink-100">
-              Data da Última Menstruação (DUM)
-            </label>
+        <input
+          type="date"
+          value={dataUltimaMenstruacao}
+          onChange={(e) => setDataUltimaMenstruacao(e.target.value)}
+        />
 
-            <input
-              type="date"
-              value={dataUltimaMenstruacao}
-              onChange={(e) => setDataUltimaMenstruacao(e.target.value)}
-              className="w-full bg-white/20 border border-white/20 rounded-2xl p-4 text-white focus:outline-none focus:ring-4 focus:ring-pink-300 transition"
-            />
-          </div>
+        {erro && <div className="erro">{erro}</div>}
 
-          {erro && (
-            <div className="bg-red-500/20 border border-red-300 text-red-100 p-3 rounded-2xl text-sm">
-              {erro}
-            </div>
-          )}
-
-          <button
-            onClick={calcularGestacao}
-            className="w-full bg-white text-pink-700 font-bold py-4 rounded-2xl text-lg hover:scale-105 hover:bg-pink-100 transition-all duration-300 shadow-xl"
-          >
-            Calcular Gestação
-          </button>
-        </div>
+        <button onClick={calcularGestacao}>
+          Calcular Gestação
+        </button>
 
         {resultado && (
-          <div className="mt-8 bg-white/15 border border-white/20 rounded-3xl p-6 backdrop-blur-lg shadow-2xl">
-            <h2 className="text-2xl font-bold mb-5 text-center">
-              Resultado
-            </h2>
+          <div className="resultado">
+            <h2>Resultado</h2>
 
-            <div className="grid gap-4">
-              <div className="bg-white/10 rounded-2xl p-4 text-center">
-                <p className="text-sm text-pink-100 mb-1">
-                  Idade Gestacional
-                </p>
+            <p>
+              <strong>Idade Gestacional:</strong>
+              <br />
+              {resultado.semanas} semanas e {resultado.dias} dias
+            </p>
 
-                <p className="text-2xl font-extrabold">
-                  {resultado.semanas} semanas
-                </p>
-
-                <p className="text-pink-100">
-                  e {resultado.dias} dias
-                </p>
-              </div>
-
-              <div className="bg-white/10 rounded-2xl p-4 text-center">
-                <p className="text-sm text-pink-100 mb-1">
-                  Data Provável do Parto
-                </p>
-
-                <p className="text-2xl font-extrabold">
-                  {resultado.parto}
-                </p>
-              </div>
-            </div>
+            <p>
+              <strong>Data Provável do Parto:</strong>
+              <br />
+              {resultado.parto}
+            </p>
           </div>
         )}
 
-        <div className="mt-6 text-center text-xs text-pink-100 opacity-80">
-          Desenvolvido com React + Tailwind CSS
-        </div>
-      </div>
-    </div>
+        <footer>Desenvolvido com React</footer>
+      </section>
+    </main>
   );
 }
