@@ -1,9 +1,46 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
+const tiposGravidez = [
+  {
+    titulo: "Gravidez única",
+    descricao:
+      "Gestação em que há apenas um bebê em desenvolvimento no útero.",
+  },
+  {
+    titulo: "Gemelar",
+    descricao:
+      "Quando há dois ou mais bebês. Pode exigir acompanhamento mais próximo.",
+  },
+  {
+    titulo: "Ectópica",
+    descricao:
+      "Ocorre quando a implantação acontece fora do útero. Requer avaliação médica imediata.",
+  },
+  {
+    titulo: "Molar",
+    descricao:
+      "Alteração rara relacionada ao desenvolvimento anormal do tecido gestacional.",
+  },
+  {
+    titulo: "Alto risco",
+    descricao:
+      "Gestação que exige monitoramento mais cuidadoso por fatores maternos ou fetais.",
+  },
+  {
+    titulo: "Anembrionária",
+    descricao:
+      "Quando o saco gestacional se desenvolve, mas o embrião não evolui adequadamente.",
+  },
+];
 
 export default function CalculadoraGestacional() {
   const [dataUltimaMenstruacao, setDataUltimaMenstruacao] = useState("");
   const [resultado, setResultado] = useState(null);
   const [erro, setErro] = useState("");
+  const [mostrarInfo, setMostrarInfo] = useState(false);
+  const [tema, setTema] = useState("escuro");
+
+  const modoEscuro = tema === "escuro";
 
   const calcularGestacao = () => {
     setErro("");
@@ -47,121 +84,538 @@ export default function CalculadoraGestacional() {
     setResultado({
       semanas,
       dias,
+      diasGestacao,
       parto: dataParto.toLocaleDateString("pt-BR", opcoes),
     });
   };
 
+  const progresso = useMemo(() => {
+    if (!resultado) return 0;
+    return Math.min(resultado.semanas / 40, 1);
+  }, [resultado]);
+
+  const percentualGestacao = Math.round(progresso * 100);
+
+  const trimestre = resultado
+    ? resultado.semanas <= 13
+      ? "1º trimestre"
+      : resultado.semanas <= 27
+      ? "2º trimestre"
+      : "3º trimestre"
+    : "";
+
+  const circumference = 2 * Math.PI * 52;
+  const strokeDashoffset = circumference * (1 - progresso);
+
+  const classes = {
+    main: modoEscuro
+      ? "min-h-screen overflow-hidden bg-[#120a18] text-white relative"
+      : "min-h-screen overflow-hidden bg-[#fff7fb] text-slate-950 relative",
+
+    background: modoEscuro
+      ? "absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(168,85,247,0.26),transparent_32%),radial-gradient(circle_at_85%_20%,rgba(236,72,153,0.22),transparent_30%),linear-gradient(135deg,#120a18_0%,#21142b_48%,#3b1736_100%)]"
+      : "absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(244,114,182,0.22),transparent_32%),radial-gradient(circle_at_85%_20%,rgba(251,207,232,0.55),transparent_32%),linear-gradient(135deg,#fff7fb_0%,#fff_48%,#ffe4f1_100%)]",
+
+    grid: modoEscuro
+      ? "absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:44px_44px] opacity-35"
+      : "absolute inset-0 bg-[linear-gradient(rgba(190,24,93,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(190,24,93,0.045)_1px,transparent_1px)] bg-[size:44px_44px] opacity-60",
+
+    nav: modoEscuro
+      ? "mb-8 flex items-center justify-between rounded-full border border-white/10 bg-white/[0.07] px-4 py-3 shadow-2xl backdrop-blur-2xl"
+      : "mb-8 flex items-center justify-between rounded-full border border-pink-100 bg-white/80 px-4 py-3 shadow-xl shadow-pink-100/60 backdrop-blur-2xl",
+
+    softText: modoEscuro ? "text-pink-50/75" : "text-slate-600",
+
+    heroCard: modoEscuro
+      ? "rounded-3xl border border-white/10 bg-white/[0.08] p-5 shadow-xl backdrop-blur-xl transition hover:-translate-y-1 hover:bg-white/[0.12]"
+      : "rounded-3xl border border-pink-100 bg-white/80 p-5 shadow-xl shadow-pink-100/60 backdrop-blur-xl transition hover:-translate-y-1 hover:bg-white",
+
+    outerPanel: modoEscuro
+      ? "rounded-[2.2rem] border border-white/15 bg-white/[0.09] p-3 shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-2xl"
+      : "rounded-[2.2rem] border border-pink-100 bg-white/60 p-3 shadow-[0_30px_90px_rgba(244,114,182,0.18)] backdrop-blur-2xl",
+
+    innerPanel: modoEscuro
+      ? "rounded-[1.8rem] border border-white/10 bg-[#fffafc] p-6 text-slate-950 shadow-2xl sm:p-7"
+      : "rounded-[1.8rem] border border-pink-100 bg-white p-6 text-slate-950 shadow-2xl shadow-pink-100/60 sm:p-7",
+
+    infoSection: modoEscuro
+      ? "mt-10 rounded-[2rem] border border-white/10 bg-white/[0.08] p-6 shadow-2xl backdrop-blur-2xl sm:p-8"
+      : "mt-10 rounded-[2rem] border border-pink-100 bg-white/80 p-6 shadow-2xl shadow-pink-100/60 backdrop-blur-2xl sm:p-8",
+
+    infoCard: modoEscuro
+      ? "rounded-3xl border border-white/10 bg-white/[0.08] p-5 shadow-xl backdrop-blur-xl transition hover:-translate-y-1 hover:bg-white/[0.12]"
+      : "rounded-3xl border border-pink-100 bg-white p-5 shadow-xl shadow-pink-100/50 transition hover:-translate-y-1 hover:bg-pink-50/40",
+  };
+
   return (
-    <main className="min-h-screen bg-[#120817] text-white overflow-hidden relative flex items-center justify-center px-5 py-10">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(236,72,153,0.35),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(244,63,94,0.28),_transparent_35%)]" />
-      <div className="absolute -top-28 -left-28 h-80 w-80 rounded-full bg-pink-500/20 blur-3xl" />
-      <div className="absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-rose-400/20 blur-3xl" />
+    <main className={classes.main}>
+      <div className={classes.background} />
+      <div className={classes.grid} />
 
-      <section className="relative w-full max-w-5xl grid lg:grid-cols-[1.05fr_0.95fr] gap-8 items-center">
-        <div className="space-y-7">
-          <span className="inline-flex items-center rounded-full border border-pink-300/20 bg-white/10 px-4 py-2 text-sm text-pink-100 shadow-lg backdrop-blur">
-            Calculadora obstétrica simples e rápida
-          </span>
+      <div
+        className={
+          modoEscuro
+            ? "absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-purple-500/20 blur-3xl"
+            : "absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-pink-300/30 blur-3xl"
+        }
+      />
 
-          <div className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
-              Calculadora Gestacional
-            </h1>
+      <div
+        className={
+          modoEscuro
+            ? "absolute -bottom-40 -right-28 h-[28rem] w-[28rem] rounded-full bg-pink-500/15 blur-3xl"
+            : "absolute -bottom-40 -right-28 h-[28rem] w-[28rem] rounded-full bg-rose-200/50 blur-3xl"
+        }
+      />
 
-            <p className="max-w-xl text-base sm:text-lg text-pink-100/85 leading-relaxed">
-              Informe a data da última menstruação para estimar a idade gestacional e a data provável do parto.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-3 max-w-xl">
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-              <p className="text-2xl font-bold">40</p>
-              <p className="text-sm text-pink-100/80">semanas como base</p>
+      <section className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-6 sm:px-8">
+        <nav className={classes.nav}>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-xl">
+              <span className="h-4 w-4 rounded-full bg-gradient-to-br from-pink-600 to-rose-500" />
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-              <p className="text-2xl font-bold">280</p>
-              <p className="text-sm text-pink-100/80">dias estimados</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-              <p className="text-2xl font-bold">DUM</p>
-              <p className="text-sm text-pink-100/80">método usado</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-[2rem] border border-white/15 bg-white/[0.08] p-6 sm:p-8 shadow-2xl backdrop-blur-2xl">
-          <div className="mb-7 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-3xl shadow-xl">
-              🤰
-            </div>
-
-            <h2 className="text-2xl font-extrabold">Faça o cálculo</h2>
-            <p className="mt-2 text-sm text-pink-100/75">
-              Resultado gerado automaticamente a partir da DUM.
-            </p>
-          </div>
-
-          <div className="space-y-5">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-pink-100">
-                Data da Última Menstruação (DUM)
-              </label>
-
-              <input
-                type="date"
-                value={dataUltimaMenstruacao}
-                onChange={(e) => setDataUltimaMenstruacao(e.target.value)}
-                className="w-full rounded-2xl border border-white/15 bg-white/95 px-4 py-4 text-slate-900 shadow-lg outline-none transition focus:border-pink-300 focus:ring-4 focus:ring-pink-300/30"
-              />
+              <p className="text-sm font-extrabold tracking-wide">
+                Calculadora Gestacional
+              </p>
+              <p
+                className={
+                  modoEscuro
+                    ? "text-xs text-pink-100/65"
+                    : "text-xs text-slate-500"
+                }
+              >
+                Idade gestacional e DPP
+              </p>
             </div>
+          </div>
 
-            {erro && (
-              <div className="rounded-2xl border border-red-300/30 bg-red-500/15 px-4 py-3 text-sm text-red-100">
-                {erro}
-              </div>
-            )}
+          <div className="flex items-center gap-2">
+            <span
+              className={
+                modoEscuro
+                  ? "hidden rounded-full border border-pink-200/20 bg-pink-200/10 px-4 py-2 text-xs font-semibold text-pink-50 sm:inline-flex"
+                  : "hidden rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-xs font-semibold text-pink-700 sm:inline-flex"
+              }
+            >
+              Estimativa por DUM
+            </span>
 
             <button
-              onClick={calcularGestacao}
-              className="w-full rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 px-5 py-4 text-base font-extrabold text-white shadow-xl shadow-pink-950/30 transition hover:-translate-y-0.5 hover:from-pink-400 hover:to-rose-400 active:translate-y-0"
+              onClick={() => setTema(modoEscuro ? "claro" : "escuro")}
+              className={
+                modoEscuro
+                  ? "rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/15"
+                  : "rounded-full border border-pink-100 bg-white px-4 py-2 text-xs font-bold text-pink-700 shadow-sm transition hover:bg-pink-50"
+              }
             >
-              Calcular idade gestacional
+              {modoEscuro ? "Modo claro" : "Modo escuro"}
             </button>
           </div>
+        </nav>
 
-          {resultado && (
-            <div className="mt-7 space-y-4 rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur">
-              <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-4">
-                <div>
-                  <p className="text-sm text-pink-100/75">Resultado</p>
-                  <h3 className="text-xl font-bold">Estimativa gestacional</h3>
-                </div>
-                <span className="rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-bold text-emerald-100 border border-emerald-300/20">
-                  calculado
-                </span>
+        <div className="grid flex-1 items-start gap-8 lg:grid-cols-[1fr_440px]">
+          <div className="space-y-8">
+            <div
+              className={
+                modoEscuro
+                  ? "inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.08] px-4 py-2 text-sm text-pink-50 shadow-xl backdrop-blur-xl"
+                  : "inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white/80 px-4 py-2 text-sm text-pink-700 shadow-xl shadow-pink-100/60 backdrop-blur-xl"
+              }
+            >
+              <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_16px_rgba(110,231,183,0.9)]" />
+              Ferramenta rápida, simples e responsiva
+            </div>
+
+            <div className="space-y-5">
+              <h1 className="max-w-3xl text-5xl font-black leading-[0.96] tracking-tight sm:text-6xl lg:text-7xl">
+                Calcule sua idade gestacional com clareza.
+              </h1>
+
+              <p className={`max-w-2xl text-lg leading-8 ${classes.softText}`}>
+                Informe a data da última menstruação e receba uma estimativa
+                organizada em semanas, dias e data provável do parto.
+              </p>
+            </div>
+
+            <div className="grid max-w-2xl gap-4 sm:grid-cols-3">
+              <div className={classes.heroCard}>
+                <p className="text-3xl font-black">40</p>
+                <p className={`mt-1 text-sm leading-5 ${classes.softText}`}>
+                  semanas consideradas no cálculo
+                </p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl bg-white/10 p-4">
-                  <p className="text-sm text-pink-100/75">Idade gestacional</p>
-                  <p className="mt-1 text-3xl font-black">{resultado.semanas}</p>
-                  <p className="text-sm text-pink-100/80">semanas e {resultado.dias} dias</p>
-                </div>
+              <div className={classes.heroCard}>
+                <p className="text-3xl font-black">280</p>
+                <p className={`mt-1 text-sm leading-5 ${classes.softText}`}>
+                  dias estimados até o parto
+                </p>
+              </div>
 
-                <div className="rounded-2xl bg-white/10 p-4">
-                  <p className="text-sm text-pink-100/75">Data provável do parto</p>
-                  <p className="mt-2 text-xl font-black capitalize leading-snug">{resultado.parto}</p>
-                </div>
+              <div className={classes.heroCard}>
+                <p className="text-3xl font-black">DUM</p>
+                <p className={`mt-1 text-sm leading-5 ${classes.softText}`}>
+                  base obstétrica utilizada
+                </p>
               </div>
             </div>
-          )}
+          </div>
 
-          <p className="mt-6 text-center text-xs leading-relaxed text-pink-100/60">
-            Esta ferramenta fornece apenas uma estimativa. Para avaliação individual, consulte um profissional de saúde.
-          </p>
+          <aside className={classes.outerPanel}>
+            <div className={classes.innerPanel}>
+              <div className="mb-7 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.2em] text-rose-500">
+                    Calculadora
+                  </p>
+                  <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950">
+                    Gestacional
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Preencha a DUM para gerar a estimativa.
+                  </p>
+                </div>
+
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.3rem] bg-gradient-to-br from-pink-600 to-rose-500 shadow-xl shadow-pink-200">
+                  <span className="h-5 w-5 rounded-full border-2 border-white/90" />
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="mb-2 block text-sm font-extrabold text-slate-700">
+                    Data da Última Menstruação
+                  </label>
+
+                  <input
+                    type="date"
+                    value={dataUltimaMenstruacao}
+                    onChange={(e) => setDataUltimaMenstruacao(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-slate-900 shadow-sm outline-none transition focus:border-pink-400 focus:ring-4 focus:ring-pink-100"
+                  />
+                </div>
+
+                {erro && (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+                    {erro}
+                  </div>
+                )}
+
+                <button
+                  onClick={calcularGestacao}
+                  className="w-full rounded-2xl bg-gradient-to-r from-pink-600 to-rose-500 px-5 py-4 text-base font-black text-white shadow-xl shadow-pink-200 transition hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-200 active:translate-y-0"
+                >
+                  Calcular agora
+                </button>
+              </div>
+
+              {resultado ? (
+                <>
+                  <div className="mt-7 overflow-hidden rounded-3xl border border-pink-100 bg-gradient-to-br from-pink-50 to-rose-50 shadow-inner">
+                    <div className="border-b border-pink-100 px-5 py-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-black uppercase tracking-[0.2em] text-rose-500">
+                            Resultado
+                          </p>
+                          <h3 className="mt-1 text-lg font-black text-slate-900">
+                            Estimativa calculada
+                          </h3>
+                        </div>
+
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700">
+                          pronto
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 p-5">
+                      <div className="rounded-2xl bg-white p-5 shadow-sm">
+                        <p className="text-sm font-bold text-slate-500">
+                          Idade gestacional
+                        </p>
+
+                        <div className="mt-2 flex items-end gap-2">
+                          <span className="text-5xl font-black tracking-tight text-slate-950">
+                            {resultado.semanas}
+                          </span>
+                          <span className="pb-2 text-sm font-bold text-slate-500">
+                            semanas
+                          </span>
+                        </div>
+
+                        <p className="mt-1 text-sm font-semibold text-rose-500">
+                          + {resultado.dias} dias
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl bg-white p-5 shadow-sm">
+                        <p className="text-sm font-bold text-slate-500">
+                          Data provável do parto
+                        </p>
+                        <p className="mt-2 text-2xl font-black capitalize leading-tight text-slate-950">
+                          {resultado.parto}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl bg-white p-5 shadow-sm">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-bold text-slate-500">
+                              Evolução da gestação
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              Visualização estimada do progresso gestacional
+                            </p>
+                          </div>
+
+                          <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-500">
+                            {trimestre}
+                          </span>
+                        </div>
+
+                        <div className="mt-5 grid items-center gap-6">
+                          <div className="relative mx-auto h-40 w-40">
+                            <svg
+                              className="h-40 w-40 -rotate-90"
+                              viewBox="0 0 120 120"
+                            >
+                              <circle
+                                cx="60"
+                                cy="60"
+                                r="52"
+                                fill="none"
+                                stroke="#fce7f3"
+                                strokeWidth="10"
+                              />
+                              <circle
+                                cx="60"
+                                cy="60"
+                                r="52"
+                                fill="none"
+                                stroke="url(#progressGradient)"
+                                strokeWidth="10"
+                                strokeLinecap="round"
+                                strokeDasharray={circumference}
+                                strokeDashoffset={strokeDashoffset}
+                                className="transition-all duration-700 ease-out"
+                              />
+                              <defs>
+                                <linearGradient
+                                  id="progressGradient"
+                                  x1="0%"
+                                  y1="0%"
+                                  x2="100%"
+                                  y2="100%"
+                                >
+                                  <stop offset="0%" stopColor="#ec4899" />
+                                  <stop offset="100%" stopColor="#f43f5e" />
+                                </linearGradient>
+                              </defs>
+                            </svg>
+
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                              <span className="text-4xl font-black text-slate-950">
+                                {resultado.semanas}
+                              </span>
+                              <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                                semanas
+                              </span>
+                              <span className="mt-1 text-xs font-semibold text-rose-500">
+                                {percentualGestacao}% da gestação
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50 p-4">
+                              <p className="text-sm font-bold text-slate-700">
+                                Fase atual:{" "}
+                                <span className="text-rose-500">
+                                  {trimestre}
+                                </span>
+                              </p>
+                              <p className="mt-1 text-sm text-slate-500">
+                                A estimativa foi calculada com base em 40
+                                semanas gestacionais.
+                              </p>
+                            </div>
+
+                            <div>
+                              <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-500">
+                                <span>Início</span>
+                                <span>Desenvolvimento</span>
+                                <span>Final</span>
+                              </div>
+
+                              <div className="h-3 w-full overflow-hidden rounded-full bg-pink-100">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-700"
+                                  style={{ width: `${percentualGestacao}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2">
+                              <div
+                                className={`rounded-2xl border p-3 text-center ${
+                                  resultado.semanas <= 13
+                                    ? "border-rose-200 bg-rose-50"
+                                    : "border-slate-200 bg-slate-50"
+                                }`}
+                              >
+                                <p className="text-xs font-bold text-slate-500">
+                                  1º tri.
+                                </p>
+                                <p className="mt-1 text-sm font-extrabold text-slate-900">
+                                  1–13
+                                </p>
+                              </div>
+
+                              <div
+                                className={`rounded-2xl border p-3 text-center ${
+                                  resultado.semanas >= 14 &&
+                                  resultado.semanas <= 27
+                                    ? "border-rose-200 bg-rose-50"
+                                    : "border-slate-200 bg-slate-50"
+                                }`}
+                              >
+                                <p className="text-xs font-bold text-slate-500">
+                                  2º tri.
+                                </p>
+                                <p className="mt-1 text-sm font-extrabold text-slate-900">
+                                  14–27
+                                </p>
+                              </div>
+
+                              <div
+                                className={`rounded-2xl border p-3 text-center ${
+                                  resultado.semanas >= 28
+                                    ? "border-rose-200 bg-rose-50"
+                                    : "border-slate-200 bg-slate-50"
+                                }`}
+                              >
+                                <p className="text-xs font-bold text-slate-500">
+                                  3º tri.
+                                </p>
+                                <p className="mt-1 text-sm font-extrabold text-slate-900">
+                                  28–40
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setMostrarInfo(!mostrarInfo)}
+                    className="mt-5 w-full rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-black text-rose-600 transition hover:bg-rose-100"
+                  >
+                    {mostrarInfo
+                      ? "Ocultar tipos de gravidez"
+                      : "Ver tipos de gravidez"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="mt-7 rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center">
+                    <p className="text-sm font-semibold text-slate-500">
+                      O resultado aparecerá aqui após o cálculo.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setMostrarInfo(!mostrarInfo)}
+                    className="mt-5 w-full rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-black text-rose-600 transition hover:bg-rose-100"
+                  >
+                    {mostrarInfo
+                      ? "Ocultar tipos de gravidez"
+                      : "Ver tipos de gravidez"}
+                  </button>
+                </>
+              )}
+
+              <p className="mt-6 text-center text-xs leading-5 text-slate-400">
+                Esta ferramenta fornece apenas uma estimativa e não substitui
+                acompanhamento médico.
+              </p>
+            </div>
+          </aside>
         </div>
+
+        {mostrarInfo && (
+          <section className={classes.infoSection}>
+            <div className="mb-6">
+              <p
+                className={
+                  modoEscuro
+                    ? "text-sm font-bold uppercase tracking-[0.2em] text-pink-200/80"
+                    : "text-sm font-bold uppercase tracking-[0.2em] text-pink-600"
+                }
+              >
+                Tipos de gravidez
+              </p>
+
+              <h2 className="mt-2 text-3xl font-black tracking-tight">
+                Entenda melhor algumas classificações gestacionais
+              </h2>
+
+              <p
+                className={`mt-3 max-w-3xl text-sm leading-7 ${classes.softText}`}
+              >
+                Abaixo estão alguns tipos de gravidez e situações gestacionais
+                frequentemente mencionadas no contexto obstétrico.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {tiposGravidez.map((item) => (
+                <article key={item.titulo} className={classes.infoCard}>
+                  <div className="mb-4 h-10 w-10 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500" />
+                  <h3 className="text-xl font-black">{item.titulo}</h3>
+                  <p className={`mt-3 text-sm leading-7 ${classes.softText}`}>
+                    {item.descricao}
+                  </p>
+                </article>
+              ))}
+            </div>
+
+            <p
+              className={
+                modoEscuro
+                  ? "mt-6 text-center text-xs leading-6 text-pink-50/60"
+                  : "mt-6 text-center text-xs leading-6 text-slate-500"
+              }
+            >
+              As informações desta seção têm caráter educativo e não substituem
+              orientação médica.
+            </p>
+          </section>
+        )}
+
+        <footer
+          className={
+            modoEscuro
+              ? "relative mt-10 text-center text-xs text-pink-100/60"
+              : "relative mt-10 text-center text-xs text-slate-500"
+          }
+        >
+          Desenvolvido por{" "}
+          <span
+            className={
+              modoEscuro
+                ? "font-semibold text-pink-50"
+                : "font-semibold text-pink-700"
+            }
+          >
+            Alexandre Ribeiro
+          </span>{" "}
+          · React + Tailwind CSS
+        </footer>
       </section>
     </main>
   );
