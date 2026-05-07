@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const tiposGravidez = [
   {
@@ -668,6 +669,7 @@ export default function CalculadoraGestacional() {
           Desenvolvido por <span className={modoEscuro ? "font-semibold text-pink-50" : "font-semibold text-pink-700"}>Alexandre Ribeiro</span> · React + Tailwind CSS
         </footer>
       </section>
+      <SpeedInsights />
     </main>
   );
 }
