@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 const tiposGravidez = [
   {
@@ -617,6 +618,7 @@ export default function CalculadoraGestacional() {
           · React + Tailwind CSS
         </footer>
       </section>
+      <Analytics />
     </main>
   );
 }
