@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import "./App.css";
+import { useState } from "react";
 
-export default function CalculadoraGestacional() {
+export default function App() {
   const [dataUltimaMenstruacao, setDataUltimaMenstruacao] = useState("");
   const [resultado, setResultado] = useState(null);
   const [erro, setErro] = useState("");
@@ -30,9 +31,7 @@ export default function CalculadoraGestacional() {
     }
 
     const diferencaMs = hoje.getTime() - dum.getTime();
-    const diasGestacao = Math.floor(
-      diferencaMs / (1000 * 60 * 60 * 24)
-    );
+    const diasGestacao = Math.floor(diferencaMs / (1000 * 60 * 60 * 24));
 
     const semanas = Math.floor(diasGestacao / 7);
     const dias = diasGestacao % 7;
@@ -40,16 +39,10 @@ export default function CalculadoraGestacional() {
     const dataParto = new Date(dum);
     dataParto.setDate(dataParto.getDate() + 280);
 
-    const opcoes = {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    };
-
     setResultado({
       semanas,
       dias,
-      parto: dataParto.toLocaleDateString("pt-BR", opcoes),
+      parto: dataParto.toLocaleDateString("pt-BR"),
     });
   };
 
